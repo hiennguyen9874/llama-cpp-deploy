@@ -20,7 +20,7 @@
 Phù hợp chatbot nội bộ, request ngắn–trung bình, ưu tiên thời gian token đầu tiên (TTFT).
 
 ```bash
-./llama.cpp/build/bin/llama-server \
+CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   -hf unsloth/Seed-OSS-36B-Instruct-GGUF:Q5_K_XL \
   --alias seed-oss-36b-q5kx \
   --chat-template seed_oss \
