@@ -11,12 +11,15 @@
 - https://huggingface.co/unsloth/GLM-4.5-Air-GGUF/discussions/1
 - https://huggingface.co/unsloth/GLM-4.5-Air-GGUF/discussions/9
 - https://github.com/ggml-org/llama.cpp/pull/15186
+- If you want to disable thinking, add /nothink (correct, no underscore) at the end of your prompt.
 
 ### Qwen3-Coder
 
 - https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF
 
 ### Seed OSS
+
+- https://huggingface.co/unsloth/Seed-OSS-36B-Instruct-GGUF
 
 - https://www.reddit.com/r/LocalLLaMA/comments/1n2xrpw/hows_seedoss_39b_for_coding/
 - https://github.com/ggml-org/llama.cpp/pull/15552
