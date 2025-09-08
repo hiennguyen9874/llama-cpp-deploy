@@ -1,0 +1,49 @@
+x-restart-policy: &restart_policy
+  restart: unless-stopped
+
+x-logging: &logging
+  logging:
+    driver: 'json-file'
+    options:
+      max-size: '10m'
+      max-file: '2'
+
+x-healthcheck: &healthcheck
+  interval: 10s
+  start_period: 5s
+  timeout: 10s
+  retries: 5
+
+services:
+  llama-cpp:
+    <<: [*restart_policy, *logging]
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    hostname: ${COMPOSE_PROJECT_NAME}-llama-cpp
+    container_name: ${COMPOSE_PROJECT_NAME}_llama-cpp
+    command: >
+      -m /models/Qwen3-30B-A3B-Thinking-2507-Deepseek-v3.1-Distill-Q5_K_M.gguf
+      --port 8000
+      --host 0.0.0.0
+      --alias qwen3-30b-a3b-thinking
+      -fa on 
+      -ngl 999 --device CUDA0
+      -c 16384
+      -b 4096 -ub 1024
+      -ctk q8_0 -ctv q8_0
+      --parallel 4
+      --threads 16 --threads-http -1
+      --jinja
+      --metrics --slots
+      --temp 0.6 --min-p 0.0 --top-p 0.95 --top-k 20 --presence-penalty 1.0
+      --api-key llama-cpp-api-key
+    expose:
+      - 8000
+    ports:
+      - 18000:8000
+    volumes:
+      - ./models:/models
+    runtime: nvidia
+    ipc: host
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=1
+      - NVIDIA_DRIVER_CAPABILITIES=all
