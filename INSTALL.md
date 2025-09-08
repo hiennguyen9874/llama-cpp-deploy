@@ -38,6 +38,6 @@ apt update -y && apt install -y curl libssl-dev libcurl4-openssl-dev
 git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
 
-cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="80"
+cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="80" -DBUILD_SHARED_LIBS=OFF -DLLAMA_CURL=ON
 cmake --build build --config Release -j 8
 ```

@@ -6,7 +6,8 @@
 - **Batch / micro-batch**: giữ `-b` (logical batch) cao để tận dụng continuous batching, và điều chỉnh `-ub` (micro/physical batch) vừa phải để không “xé” VRAM. Thực tế A100 40GB với 36B Q5_K_XL rất hợp với `-b 4096` và `-ub 1024–2048`.
 - **Chat template**: dùng sẵn template `seed_oss` để format hội thoại chuẩn: `--chat-template seed_oss`.
 - **Continuous batching**: mặc định **đã bật** trong server; giữ nguyên để phục vụ đa người dùng hiệu quả.
-- **Theo dõi & tinh chỉnh**: bật `--metrics --slots` để theo dõi /metrics và /slots; điều chỉnh `-c` (ctx), `--parallel`, `-ub` theo nvidia-smi và độ trễ thực tế.
+- **Theo dõi & tinh chỉnh**: bật `--metrics --slots \
+--temp 0.7 --min-p 0.0 --top-p 0.80 1.1op-1.0` để theotheo nvidia-smi và độ trễ thực tế95
 
 ---
 
@@ -31,7 +32,8 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   -ctk q8_0 -ctv q8_0 \
   --parallel 4 \
   --threads $(nproc) --threads-http -1 \
-  --metrics --slots
+  --metrics --slots \
+  --temp 1.1 --top-p 0.95
 ```
 
 **Giải thích nhanh**
@@ -59,7 +61,8 @@ Khi cần context dài hơn và/hoặc nhiều slot đồng thời.
   --parallel 8 \
   --cache-reuse 1024 \
   --threads $(nproc) --threads-http -1 \
-  --metrics --slots
+  --metrics --slots \
+  --temp 1.1 --top-p 0.95
 ```
 
 **Ghi chú**
@@ -85,7 +88,8 @@ Nếu bạn thấy OOM khi tải nhiều người dùng, giảm `-ub`, giữ `-b
   -ctk q8_0 -ctv q8_0 \
   --parallel 6 \
   --threads $(nproc) --threads-http -1 \
-  --metrics --slots
+  --metrics --slots \
+  --temp 1.1 --top-p 0.95
 ```
 
 ---
@@ -116,8 +120,9 @@ Nếu bạn thấy OOM khi tải nhiều người dùng, giảm `-ub`, giữ `-b
 - `--chat-template seed_oss`
   Đảm bảo định dạng nhắc/đáp đúng phong cách Seed-OSS Instruct.
 
-- `--metrics --slots`
-  Bật Prometheus `/metrics` và giám sát “slot” để tuning live.
+- `--metrics --slots \
+--temp 1.1---top-p 0.95
+Bật Prometheus `/metrics` và giám sát “slot” để tuning live.
 
 - `--threads $(nproc)` / `--threads-http -1`
   Cho pipeline máy chủ HTTP/JSON và công đoạn tiền xử lý hoạt động mượt trên CPU host.
@@ -185,7 +190,8 @@ Nếu bạn thấy OOM khi tải nhiều người dùng, giảm `-ub`, giữ `-b
   -ctk q8_0 -ctv q8_0 \
   --parallel 8 \
   --threads $(nproc) --threads-http -1 \
-  --metrics --slots
+  --metrics --slots \
+  --temp 1.1 --top-p 0.95
 ```
 
 ### Profile độ trễ thấp (8–16k), ít người dùng đồng thời
@@ -202,7 +208,8 @@ Nếu bạn thấy OOM khi tải nhiều người dùng, giảm `-ub`, giữ `-b
   -ctk q8_0 -ctv q8_0 \
   --parallel 4 \
   --threads $(nproc) --threads-http -1 \
-  --metrics --slots
+  --metrics --slots \
+  --temp 1.1 --top-p 0.95
 ```
 
 ---
