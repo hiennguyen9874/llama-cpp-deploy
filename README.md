@@ -81,3 +81,17 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
 ### Qwen3-Coder
 
 - https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF
+
+### embeddinggemma-300M
+
+```bash
+CUDA_VISIBLE_DEVICES=1 ./llama.cpp/build/bin/llama-server -hf ggml-org/embeddinggemma-300M-GGUF --embeddings --host 0.0.0.0 --port 8081
+```
+
+```bash
+curl --request POST \
+    --url http://localhost:8081/embedding \
+    --header "Content-Type: application/json" \
+    --data '{"input": "Hello embeddings"}' \
+    --silent
+```
