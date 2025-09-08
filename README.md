@@ -87,6 +87,7 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
 ```bash
 CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   -hf ggml-org/embeddinggemma-300M-GGUF \
+  --alias embeddinggemma-300m \
   --embeddings --host 0.0.0.0 \
   --port 8081 \
   --api-key llama-cpp-api-key
