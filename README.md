@@ -74,7 +74,8 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   --threads 32 --threads-http -1 \
   --jinja \
   --metrics --slots \
-  --temp 0.6 --min-p 0.0 --top-p 0.95 --top-k 20 --presence-penalty 1.0
+  --temp 0.6 --min-p 0.0 --top-p 0.95 --top-k 20 --presence-penalty 1.0 \
+  --api-key llama-cpp-api-key
 ```
 
 ### Qwen3-Coder
