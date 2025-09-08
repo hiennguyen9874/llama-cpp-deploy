@@ -85,7 +85,7 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
 ### embeddinggemma-300M
 
 ```bash
-CUDA_VISIBLE_DEVICES=1 ./llama.cpp/build/bin/llama-server \
+CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   -hf ggml-org/embeddinggemma-300M-GGUF \
   --embeddings --host 0.0.0.0 \
   --port 8081 \
@@ -94,8 +94,9 @@ CUDA_VISIBLE_DEVICES=1 ./llama.cpp/build/bin/llama-server \
 
 ```bash
 curl --request POST \
-    --url http://localhost:8081/embedding \
+    --url http://localhost:8081/v1/embeddings \
     --header "Content-Type: application/json" \
+    --header "Authorization: Bearer llama-cpp-api-key" \
     --data '{"input": "Hello embeddings"}' \
     --silent
 ```
