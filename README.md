@@ -102,6 +102,29 @@ curl --request POST \
     --silent
 ```
 
+### Qwen3-Embedding
+
+[https://github.com/ggml-org/llama.cpp/pull/14029](https://github.com/ggml-org/llama.cpp/pull/14029)
+
+```bash
+CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
+  -hf Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0 \
+  --alias qwen3-embedding-0.6b \
+  --embeddings --pooling last -ub 8192 \
+  --host 0.0.0.0 --port 8081 \
+  --verbose-prompt \
+  --api-key llama-cpp-api-key
+```
+
+```bash
+curl --request POST \
+    --url http://localhost:8081/v1/embeddings \
+    --header "Content-Type: application/json" \
+    --header "Authorization: Bearer llama-cpp-api-key" \
+    --data '{"input": "Hello embeddings"}' \
+    --silent
+```
+
 ### Qwen3-Reranker
 
 ```bash
