@@ -151,6 +151,14 @@ curl --request POST \
 "input": ["test<|endoftext|>"],
 ```
 
+- To ensure embeddings follow instructions during downstream tasks, we concatenate the instruction
+  and the query into a single input context, while leaving the document unchanged before processing
+  with LLMs. The input format for queries is as follows:
+
+```
+{Instruction} {Query}<|endoftext|>
+```
+
 ### Qwen3-Reranker
 
 ```bash
