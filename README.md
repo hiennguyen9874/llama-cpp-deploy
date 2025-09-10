@@ -108,6 +108,10 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   --embeddings --host 0.0.0.0 \
   --port 8081 \
   --api-key llama-cpp-api-key
+  -fa on -ngl 999 --device CUDA0 \
+  --parallel 4 \
+  --threads 32 --threads-http -1 \
+  --metrics --slots
 ```
 
 ```bash
@@ -132,7 +136,11 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   --embeddings --pooling last -ub 8192 \
   --host 0.0.0.0 --port 8081 \
   --verbose-prompt \
-  --api-key llama-cpp-api-key
+  --api-key llama-cpp-api-key \
+  -fa on -ngl 999 --device CUDA0 \
+  --parallel 4 \
+  --threads 32 --threads-http -1 \
+  --metrics --slots
 ```
 
 ```bash
