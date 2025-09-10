@@ -225,3 +225,14 @@ Bật Prometheus `/metrics` và giám sát “slot” để tuning live.
 ---
 
 Nếu bạn muốn, mình có thể viết thêm một **docker-compose** mẫu (kèm Prometheus scrape `/metrics`) và **dashboard** Grafana tối thiểu để bạn cắm vào ngay.
+
+# 8) Bench
+
+```bash
+CUDA_VISIBLE_DEVICES=1 ./llama.cpp/build/bin/llama-bench \
+  -m /root/.cache/llama.cpp/unsloth_Seed-OSS-36B-Instruct-GGUF_Seed-OSS-36B-Instruct-UD-Q5_K_XL.gguf \
+  -fa on -ngl 999 \
+  -b 128,256,512,1024 \
+  -ctk q8_0 -ctv q8_0 \
+  --threads $(nproc)
+```
