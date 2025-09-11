@@ -95,6 +95,23 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   --api-key llama-cpp-api-key
 ```
 
+```bash
+CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
+  -hf unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF:Q5_K_XL \
+  --alias Qwen3-30B-A3B-Thinking-2507 \
+  --host 0.0.0.0 --port 8000 \
+  -fa on -ngl 999 --device CUDA0 \
+  -c 16384 \
+  -b 4096 -ub 1024 \
+  -ctk q8_0 -ctv q8_0 \
+  --parallel 4 \
+  --threads 32 --threads-http -1 \
+  --jinja \
+  --metrics --slots \
+  --temp 0.6 --min-p 0.0 --top-p 0.80 --top-k 20 --presence-penalty 1.0 \
+  --api-key llama-cpp-api-key
+```
+
 ### Qwen3-Coder
 
 - https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF
