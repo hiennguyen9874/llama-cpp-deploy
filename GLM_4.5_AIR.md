@@ -48,7 +48,7 @@
 CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   -hf unsloth/GLM-4.5-Air-GGUF:Q4_K_XL \
   --alias glm45air-q4kxl \
-  --host 0.0.0.0 --port 8080 \
+  --host 0.0.0.0 --port 8000 \
   -dev CUDA0 \
   --n-gpu-layers 999 \
   --flash-attn on \

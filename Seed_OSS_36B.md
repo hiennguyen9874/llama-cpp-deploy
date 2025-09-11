@@ -25,7 +25,7 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
   -hf unsloth/Seed-OSS-36B-Instruct-GGUF:Q5_K_XL \
   --alias seed-oss-36b-q5kx \
   --chat-template seed_oss \
-  --host 0.0.0.0 --port 8080 \
+  --host 0.0.0.0 --port 8000 \
   -fa on -ngl 999 --device CUDA0 \
   -c 16384 \
   -b 4096 -ub 1024 \
@@ -53,7 +53,7 @@ Khi cần context dài hơn và/hoặc nhiều slot đồng thời.
   -hf unsloth/Seed-OSS-36B-Instruct-GGUF:Q5_K_XL \
   --alias seed-oss-36b-q5kx \
   --chat-template seed_oss \
-  --host 0.0.0.0 --port 8080 \
+  --host 0.0.0.0 --port 8000 \
   -fa on -ngl 999 --device CUDA0 \
   -c 32768 \
   -b 4096 -ub 2048 \
@@ -81,7 +81,7 @@ Nếu bạn thấy OOM khi tải nhiều người dùng, giảm `-ub`, giữ `-b
   -hf unsloth/Seed-OSS-36B-Instruct-GGUF:Q5_K_XL \
   --alias seed-oss-36b-q5kx \
   --chat-template seed_oss \
-  --host 0.0.0.0 --port 8080 \
+  --host 0.0.0.0 --port 8000 \
   -fa on -ngl 999 --device CUDA0 \
   -c 32768 \
   -b 4096 -ub 1024 \
@@ -183,7 +183,7 @@ Bật Prometheus `/metrics` và giám sát “slot” để tuning live.
   -hf unsloth/Seed-OSS-36B-Instruct-GGUF:Q5_K_XL \
   --alias seed-oss-36b-q5kx \
   --chat-template seed_oss \
-  --host 0.0.0.0 --port 8080 \
+  --host 0.0.0.0 --port 8000 \
   -fa on -ngl 999 --device CUDA0 \
   -c 32768 \
   -b 4096 -ub 2048 \
@@ -201,7 +201,7 @@ Bật Prometheus `/metrics` và giám sát “slot” để tuning live.
   -hf unsloth/Seed-OSS-36B-Instruct-GGUF:Q5_K_XL \
   --alias seed-oss-36b-q5kx \
   --chat-template seed_oss \
-  --host 0.0.0.0 --port 8080 \
+  --host 0.0.0.0 --port 8000 \
   -fa on -ngl 999 --device CUDA0 \
   -c 16384 \
   -b 4096 -ub 1024 \
