@@ -234,6 +234,7 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
 ```bash
 curl http://localhost:8080/v1/completions \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer llama-cpp-api-key" \
   -d '{
   "model": "NVIDIA-Nemotron-Nano-12B-v2",
   "prompt": "two steps to build a house:"
