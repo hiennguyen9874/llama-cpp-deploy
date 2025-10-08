@@ -21,7 +21,7 @@ services:
     hostname: ${COMPOSE_PROJECT_NAME}-llama-cpp
     container_name: ${COMPOSE_PROJECT_NAME}_llama-cpp
     command: >
-      -m /models/Qwen3-30B-A3B-Thinking-2507-Deepseek-v3.1-Distill-Q5_K_M.gguf
+      -hf unsloth/gemma-3-270m-it-GGUF:Q4_K_XL
       --port 8000
       --host 0.0.0.0
       --alias qwen3-30b-a3b-thinking
