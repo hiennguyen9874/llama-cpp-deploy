@@ -24,11 +24,8 @@ services:
       -hf unsloth/gemma-3-270m-it-GGUF:Q4_K_XL
       --port 8000
       --host 0.0.0.0
-      --alias qwen3-30b-a3b-thinking
-      -fa on 
-      -ngl 999 --device CUDA0
-      -c 16384
-      -b 4096 -ub 1024
+      --alias gemma-3-270m
+      -ngl 999
       -ctk q8_0 -ctv q8_0
       --parallel 4
       --threads 16 --threads-http -1
