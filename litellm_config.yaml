@@ -1,0 +1,6 @@
+model_list:
+  - model_name: Qwen3-VL-Embedding-2B
+    litellm_params:
+      model: openai/Qwen3-VL-Embedding-2B
+      api_base: http://localhost:8001
+      api_key: llama-cpp-api-key

@@ -119,21 +119,20 @@ CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
 ### embeddinggemma-300M
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
-  -hf ggml-org/embeddinggemma-300M-GGUF \
+CUDA_VISIBLE_DEVICES=7 ./llama.cpp/llama-server \
+  -hf unsloth/embeddinggemma-300m-GGUF:Q8_0 \
   --alias embeddinggemma-300m \
-  --embeddings --host 0.0.0.0 \
-  --port 8081 \
+  --embeddings \
+  --host 0.0.0.0 --port 8001 \
   --api-key llama-cpp-api-key \
-  -fa on -ngl 999 --device CUDA0 \
-  --parallel 4 \
-  --threads 32 --threads-http -1 \
-  --metrics --slots
+  --threads -1 \
+  -c 4096 \
+  -b 512
 ```
 
 ```bash
 curl --request POST \
-    --url http://localhost:8081/v1/embeddings \
+    --url http://localhost:8001/v1/embeddings \
     --header "Content-Type: application/json" \
     --header "Authorization: Bearer llama-cpp-api-key" \
     --data '{"input": "Hello embeddings"}' \
@@ -265,5 +264,76 @@ curl http://localhost:8000/v1/completions \
   -d '{
   "model": "NVIDIA-InternVL3_5-30B-A3",
   "prompt": "two steps to build a house:"
+}'
+```
+
+
+### granite-4.0-h-tiny-GGUF
+
+- https://huggingface.co/unsloth/granite-4.0-h-tiny-GGUF
+
+```bash
+CUDA_VISIBLE_DEVICES=0 ./llama.cpp/build/bin/llama-server \
+  -hf unsloth/granite-4.0-h-tiny-GGUF:Q5_K_XL \
+  --alias granite-4.0-h-tiny \
+  --host 0.0.0.0 --port 8000 \
+  -fa on -ngl 999 --device CUDA0 \
+  -c 16384 \
+  --parallel 4 \
+  --threads 32 --threads-http -1 \
+  --jinja \
+  --metrics --slots \
+  --temp 0.0 --top-p 1.0 --top-k 0 \
+  --api-key llama-cpp-api-key
+```
+
+```bash
+curl http://hydra-jupyterlab-2:8000/v1/completions \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer llama-cpp-api-key" \
+  -d '{
+  "model": "granite-4.0-h-tiny",
+  "prompt": "Step by step to build a house"
+}'
+```
+
+### Nemotron-3-Nano-30B-A3B
+[https://docs.unsloth.ai/models/nemotron-3#run-nemotron-3-nano-30b-a3b](https://docs.unsloth.ai/models/nemotron-3#run-nemotron-3-nano-30b-a3b)
+
+#### Build
+```bash
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp && git fetch origin pull/18058/head:MASTER && git checkout MASTER && cd ..
+cmake llama.cpp -B llama.cpp/build \
+    -DBUILD_SHARED_LIBS=OFF -DGGML_CUDA=ON -DLLAMA_CURL=ON
+cmake --build llama.cpp/build --config Release -j --clean-first --target llama-cli llama-mtmd-cli llama-server llama-gguf-split
+cp llama.cpp/build/bin/llama-* llama.cpp
+```
+
+#### Run
+```bash
+CUDA_VISIBLE_DEVICES=7 ./llama.cpp/llama-server \
+  -hf unsloth/Nemotron-3-Nano-30B-A3B-GGUF:UD-Q4_K_XL \
+  --alias Nemotron-3-Nano-30B-A3B \
+  --host 0.0.0.0 --port 8000 \
+  -fa on -ngl 999 --device CUDA0 \
+  -c 16384 \
+  --threads -1 \
+  --jinja \
+  --metrics --slots \
+  --api-key llama-cpp-api-key \
+  --prio 3 \
+  --min_p 0.01 \
+  --temp 1.0 --top-p 1.0
+```
+
+#### Test
+```bash
+curl http://localhost:8000/v1/completions \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer llama-cpp-api-key" \
+  -d '{
+  "model": "Nemotron-3-Nano-30B-A3B",
+  "prompt": "Step by step to build a house"
 }'
 ```
