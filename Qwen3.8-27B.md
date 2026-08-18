@@ -83,13 +83,13 @@ A100 có băng thông bộ nhớ lớn nhưng không có lợi thế kernel Blac
 
 ### Quant model
 
-| Nhu cầu | Quant gợi ý | Nhận xét |
-|---|---|---|
-| Chất lượng cao trên 32–40 GB | `UD-Q6_K_XL` | Điểm cân bằng tốt, khoảng 26 GB theo dữ liệu tham khảo |
-| Thêm context/vision/MTP | `UD-Q5_K_XL` | Khoảng 20 GB, chất lượng vẫn cao |
-| Tốc độ/context, còn muốn Q4 | `UD-Q4_K_XL`, `Q4_K_M` | Khoảng 17–18 GB |
-| VRAM rất hạn chế | `UD-Q3_K_XL`, `IQ3_XXS` | Có suy giảm reasoning/coding; chỉ chọn khi cần |
-| Chất lượng gần gốc trên A100 40 GB | `Q8_0` | Khoảng 29 GB; context và MTP bị giới hạn hơn |
+| Nhu cầu                            | Quant gợi ý             | Nhận xét                                               |
+| ---------------------------------- | ----------------------- | ------------------------------------------------------ |
+| Chất lượng cao trên 32–40 GB       | `UD-Q6_K_XL`            | Điểm cân bằng tốt, khoảng 26 GB theo dữ liệu tham khảo |
+| Thêm context/vision/MTP            | `UD-Q5_K_XL`            | Khoảng 20 GB, chất lượng vẫn cao                       |
+| Tốc độ/context, còn muốn Q4        | `UD-Q4_K_XL`, `Q4_K_M`  | Khoảng 17–18 GB                                        |
+| VRAM rất hạn chế                   | `UD-Q3_K_XL`, `IQ3_XXS` | Có suy giảm reasoning/coding; chỉ chọn khi cần         |
+| Chất lượng gần gốc trên A100 40 GB | `Q8_0`                  | Khoảng 29 GB; context và MTP bị giới hạn hơn           |
 
 Không nên mặc định chọn quant thấp nhất chỉ để quảng cáo context lớn. Với coding/agent, lỗi cú pháp, tool call và khả năng giữ chỉ dẫn dài thường suy giảm trước khi câu trả lời ngắn trông có vẻ sai.
 
@@ -163,100 +163,100 @@ Bảng dưới liệt kê các argument có ảnh hưởng trực tiếp khi tri
 
 ### Model, GPU và bộ nhớ
 
-| Argument | Công dụng / cách chọn |
-|---|---|
-| `-m`, `--model FILE` | Nạp GGUF cục bộ. |
-| `-hf`, `--hf-repo repo[:quant]` | Tải/nạp từ Hugging Face; tự lấy mmproj nếu có. |
-| `-hff`, `--hf-file FILE`; `-hft`, `--hf-token TOKEN` | Chỉ định file HF và token. |
-| `-mu`, `--model-url`; `-dr`, `--docker-repo` | Nguồn model qua URL/Docker Hub. |
-| `-dev`, `--device`; `--list-devices` | Chọn GPU/backend, ví dụ `CUDA0`. |
-| `-ngl`, `--n-gpu-layers all` | Đưa toàn bộ layer lên GPU. Nên dùng `all`, không cần `99/999`. |
-| `-ot`, `--override-tensor PATTERN=BUFFER` | Offload chọn lọc tensor, thường FFN sang CPU nếu thiếu VRAM. Chỉ dùng sau khi đo đạc. |
-| `-sm`, `--split-mode`; `-ts`, `--tensor-split`; `-mg`, `--main-gpu` | Multi-GPU. Một GPU không cần đặt. |
-| `-fit`, `--fit on/off`; `--fit-target`; `--fit-ctx` | Tự điều chỉnh để vừa VRAM. Lần đầu dùng `on`; khi đã biết cấu hình vừa, dùng `off` để tránh tự đẩy layer sang CPU. |
-| `-ctk`, `-ctv` | Kiểu KV K/V: `f32,f16,bf16,q8_0,q4_0,q4_1,iq4_nl,q5_0,q5_1`. |
-| `--kv-offload` / `--no-kv-offload` | KV trên GPU/CPU; mặc định offload GPU bật. |
-| `--op-offload`; `--repack`; `--no-host` | Điều khiển offload phép tính, repack weight và host buffer; giữ mặc định trừ khi debug. |
-| `--load-mode auto|none|mmap|mlock|mmap+mlock|dio` | Cách nạp model. `auto` là mặc định; `mmap+mlock` hữu ích khi đủ RAM. |
-| `--numa TYPE` | Tối ưu máy nhiều NUMA node; A100 server nhiều socket mới cần thử. |
-| `--check-tensors`, `--override-kv` | Kiểm tra GGUF hoặc override metadata nâng cao. |
+| Argument                                                            | Công dụng / cách chọn                                                                                              |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---- | ----- | ---------- | ---- | -------------------------------------------------------------------- |
+| `-m`, `--model FILE`                                                | Nạp GGUF cục bộ.                                                                                                   |
+| `-hf`, `--hf-repo repo[:quant]`                                     | Tải/nạp từ Hugging Face; tự lấy mmproj nếu có.                                                                     |
+| `-hff`, `--hf-file FILE`; `-hft`, `--hf-token TOKEN`                | Chỉ định file HF và token.                                                                                         |
+| `-mu`, `--model-url`; `-dr`, `--docker-repo`                        | Nguồn model qua URL/Docker Hub.                                                                                    |
+| `-dev`, `--device`; `--list-devices`                                | Chọn GPU/backend, ví dụ `CUDA0`.                                                                                   |
+| `-ngl`, `--n-gpu-layers all`                                        | Đưa toàn bộ layer lên GPU. Nên dùng `all`, không cần `99/999`.                                                     |
+| `-ot`, `--override-tensor PATTERN=BUFFER`                           | Offload chọn lọc tensor, thường FFN sang CPU nếu thiếu VRAM. Chỉ dùng sau khi đo đạc.                              |
+| `-sm`, `--split-mode`; `-ts`, `--tensor-split`; `-mg`, `--main-gpu` | Multi-GPU. Một GPU không cần đặt.                                                                                  |
+| `-fit`, `--fit on/off`; `--fit-target`; `--fit-ctx`                 | Tự điều chỉnh để vừa VRAM. Lần đầu dùng `on`; khi đã biết cấu hình vừa, dùng `off` để tránh tự đẩy layer sang CPU. |
+| `-ctk`, `-ctv`                                                      | Kiểu KV K/V: `f32,f16,bf16,q8_0,q4_0,q4_1,iq4_nl,q5_0,q5_1`.                                                       |
+| `--kv-offload` / `--no-kv-offload`                                  | KV trên GPU/CPU; mặc định offload GPU bật.                                                                         |
+| `--op-offload`; `--repack`; `--no-host`                             | Điều khiển offload phép tính, repack weight và host buffer; giữ mặc định trừ khi debug.                            |
+| `--load-mode auto                                                   | none                                                                                                               | mmap | mlock | mmap+mlock | dio` | Cách nạp model. `auto` là mặc định; `mmap+mlock` hữu ích khi đủ RAM. |
+| `--numa TYPE`                                                       | Tối ưu máy nhiều NUMA node; A100 server nhiều socket mới cần thử.                                                  |
+| `--check-tensors`, `--override-kv`                                  | Kiểm tra GGUF hoặc override metadata nâng cao.                                                                     |
 
 `--cpu-moe` và `--n-cpu-moe` có trong CLI nhưng Qwen3.8-27B là dense, không phải MoE, nên không có ích cho model này.
 
 ### Context, batch, CPU và cache
 
-| Argument | Công dụng / khuyến nghị |
-|---|---|
-| `-c`, `--ctx-size N` | Tổng context. Dùng 65536/98304/131072 rồi tăng dần. `0` lấy metadata model. |
-| `-n`, `--n-predict N` | Số token sinh; `-1` không giới hạn. |
-| `-b`, `--batch-size N` | Logical batch, chủ yếu ảnh hưởng prefill; 1024–2048. |
-| `-ub`, `--ubatch-size N` | Physical batch; 512 mặc định, giảm 256/128 để cứu VRAM. |
-| `-t`, `--threads`; `-tb`, `--threads-batch` | Thread CPU cho decode/prefill. Full GPU thường để auto hoặc đặt theo core vật lý. |
-| `-C/-Cr`, `-Cb/-Crb`, `--cpu-strict*`, `--prio*`, `--poll*` | CPU affinity, priority và polling; chỉ cần khi tối ưu latency/NUMA. |
-| `-fa`, `--flash-attn on` | Nên bật cho NVIDIA và context dài. |
-| `-np`, `--parallel N` | Số slot. Single-user và context lớn: `1`. |
-| `--cont-batching` / `--no-cont-batching` | Batching liên tục; bật cho nhiều request, có thể tắt cho một người dùng. |
-| `--kv-unified` | Một KV buffer dùng chung; hữu ích cho server/slot, nhưng vẫn dùng `parallel 1` khi tối đa context. |
-| `--ctx-checkpoints N`; `--checkpoint-min-step N` | Checkpoint context/SWA. 32 là mặc định; giảm/tắt nếu build/model gặp vấn đề. |
-| `--cache-ram MiB` | Prompt cache RAM, không phải VRAM KV. |
-| `--cache-prompt`; `--cache-reuse N`; `--cache-idle-slots` | Tái sử dụng prefix cho hội thoại/agent. |
-| `--context-shift` | Dịch context khi sinh vô hạn; cân nhắc cho chat dài, không thay thế context thật. |
-| `--keep N`; `--swa-full` | Giữ token đầu và điều khiển SWA cache; thường giữ mặc định model. |
-| `--warmup` / `--no-warmup` | Warmup lúc nạp. Tắt giúp khởi động nhanh nhưng request đầu chậm hơn. |
-| `--perf` | Bật timing nội bộ để benchmark. |
+| Argument                                                    | Công dụng / khuyến nghị                                                                            |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `-c`, `--ctx-size N`                                        | Tổng context. Dùng 65536/98304/131072 rồi tăng dần. `0` lấy metadata model.                        |
+| `-n`, `--n-predict N`                                       | Số token sinh; `-1` không giới hạn.                                                                |
+| `-b`, `--batch-size N`                                      | Logical batch, chủ yếu ảnh hưởng prefill; 1024–2048.                                               |
+| `-ub`, `--ubatch-size N`                                    | Physical batch; 512 mặc định, giảm 256/128 để cứu VRAM.                                            |
+| `-t`, `--threads`; `-tb`, `--threads-batch`                 | Thread CPU cho decode/prefill. Full GPU thường để auto hoặc đặt theo core vật lý.                  |
+| `-C/-Cr`, `-Cb/-Crb`, `--cpu-strict*`, `--prio*`, `--poll*` | CPU affinity, priority và polling; chỉ cần khi tối ưu latency/NUMA.                                |
+| `-fa`, `--flash-attn on`                                    | Nên bật cho NVIDIA và context dài.                                                                 |
+| `-np`, `--parallel N`                                       | Số slot. Single-user và context lớn: `1`.                                                          |
+| `--cont-batching` / `--no-cont-batching`                    | Batching liên tục; bật cho nhiều request, có thể tắt cho một người dùng.                           |
+| `--kv-unified`                                              | Một KV buffer dùng chung; hữu ích cho server/slot, nhưng vẫn dùng `parallel 1` khi tối đa context. |
+| `--ctx-checkpoints N`; `--checkpoint-min-step N`            | Checkpoint context/SWA. 32 là mặc định; giảm/tắt nếu build/model gặp vấn đề.                       |
+| `--cache-ram MiB`                                           | Prompt cache RAM, không phải VRAM KV.                                                              |
+| `--cache-prompt`; `--cache-reuse N`; `--cache-idle-slots`   | Tái sử dụng prefix cho hội thoại/agent.                                                            |
+| `--context-shift`                                           | Dịch context khi sinh vô hạn; cân nhắc cho chat dài, không thay thế context thật.                  |
+| `--keep N`; `--swa-full`                                    | Giữ token đầu và điều khiển SWA cache; thường giữ mặc định model.                                  |
+| `--warmup` / `--no-warmup`                                  | Warmup lúc nạp. Tắt giúp khởi động nhanh nhưng request đầu chậm hơn.                               |
+| `--perf`                                                    | Bật timing nội bộ để benchmark.                                                                    |
 
 Không tự override `--rope-*`/`--yarn-*` nếu GGUF đã có metadata đúng. Chỉ dùng khi thật sự kéo context ngoài thiết kế và đã kiểm tra chất lượng.
 
 ### MTP/speculative decoding
 
-| Argument | Ý nghĩa |
-|---|---|
-| `--spec-type ...` | Chọn `none`, `draft-mtp`, các draft khác hoặc các loại n-gram; có thể ghép bằng dấu phẩy. |
-| `--spec-draft-n-max N` | Số token draft tối đa; Qwen3.8 nên bắt đầu `2`. |
-| `--spec-draft-n-min N` | Số draft tối thiểu. |
-| `--spec-draft-p-min P` | Ngưỡng xác suất draft; bắt đầu `0.0`. Đừng tối ưu chỉ theo acceptance %. |
-| `--spec-draft-p-split P` | Xác suất split, nâng cao. |
-| `--gpu-layers-draft all`; `--device-draft` | Đưa phần draft lên GPU/chọn thiết bị. |
-| `--cache-type-k-draft`, `--cache-type-v-draft` | KV cache của draft; bắt đầu `q8_0`. |
-| `--model-draft`, `--hf-repo-draft` | Draft model rời; không cần cho MTP tích hợp. |
-| `--threads-draft`, `--threads-batch-draft` và nhóm affinity/prio/poll draft | Tuning CPU cho draft rời. |
-| `--override-tensor-draft`, `--cpu-moe-draft`, `--n-cpu-moe-draft` | Offload draft nâng cao; MoE draft không liên quan MTP tích hợp của model này. |
-| `--spec-draft-backend-sampling` | Backend sampling cho draft; mặc định bật. |
-| `--spec-ngram-mod-n-min/max/match` | Tuning `ngram-mod`. |
-| `--spec-ngram-simple-*`, `--spec-ngram-map-k-*`, `--spec-ngram-map-k4v-*` | Tuning các engine n-gram tương ứng. |
-| `--lookup-cache-static/dynamic` | File lookup cache cho lookup decoding. |
-| `--spec-default` | Bật cấu hình speculative mặc định; cấu hình production nên ghi rõ `--spec-type` và `n-max`. |
+| Argument                                                                    | Ý nghĩa                                                                                     |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `--spec-type ...`                                                           | Chọn `none`, `draft-mtp`, các draft khác hoặc các loại n-gram; có thể ghép bằng dấu phẩy.   |
+| `--spec-draft-n-max N`                                                      | Số token draft tối đa; Qwen3.8 nên bắt đầu `2`.                                             |
+| `--spec-draft-n-min N`                                                      | Số draft tối thiểu.                                                                         |
+| `--spec-draft-p-min P`                                                      | Ngưỡng xác suất draft; bắt đầu `0.0`. Đừng tối ưu chỉ theo acceptance %.                    |
+| `--spec-draft-p-split P`                                                    | Xác suất split, nâng cao.                                                                   |
+| `--gpu-layers-draft all`; `--device-draft`                                  | Đưa phần draft lên GPU/chọn thiết bị.                                                       |
+| `--cache-type-k-draft`, `--cache-type-v-draft`                              | KV cache của draft; bắt đầu `q8_0`.                                                         |
+| `--model-draft`, `--hf-repo-draft`                                          | Draft model rời; không cần cho MTP tích hợp.                                                |
+| `--threads-draft`, `--threads-batch-draft` và nhóm affinity/prio/poll draft | Tuning CPU cho draft rời.                                                                   |
+| `--override-tensor-draft`, `--cpu-moe-draft`, `--n-cpu-moe-draft`           | Offload draft nâng cao; MoE draft không liên quan MTP tích hợp của model này.               |
+| `--spec-draft-backend-sampling`                                             | Backend sampling cho draft; mặc định bật.                                                   |
+| `--spec-ngram-mod-n-min/max/match`                                          | Tuning `ngram-mod`.                                                                         |
+| `--spec-ngram-simple-*`, `--spec-ngram-map-k-*`, `--spec-ngram-map-k4v-*`   | Tuning các engine n-gram tương ứng.                                                         |
+| `--lookup-cache-static/dynamic`                                             | File lookup cache cho lookup decoding.                                                      |
+| `--spec-default`                                                            | Bật cấu hình speculative mặc định; cấu hình production nên ghi rõ `--spec-type` và `n-max`. |
 
 Các cờ `--draft`, `--draft-min`, `--spec-ngram-size-*`, `--spec-ngram-min-hits` đã bị gỡ; dùng cờ `--spec-*` mới.
 
 ### Vision
 
-| Argument | Ý nghĩa |
-|---|---|
-| `--mmproj FILE`, `--mmproj-url URL` | Projector vision. `-hf` có thể tự tải. |
-| `--no-mmproj` | Text-only, tiết kiệm đáng kể VRAM. |
+| Argument                                   | Ý nghĩa                                                      |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `--mmproj FILE`, `--mmproj-url URL`        | Projector vision. `-hf` có thể tự tải.                       |
+| `--no-mmproj`                              | Text-only, tiết kiệm đáng kể VRAM.                           |
 | `--mmproj-offload` / `--no-mmproj-offload` | Projector GPU/CPU. CPU tiết kiệm VRAM nhưng encode ảnh chậm. |
-| `--image-min-tokens`, `--image-max-tokens` | Token ảnh cho dynamic resolution. |
-| `--mtmd-batch-max-tokens` | Số image token tối đa mỗi batch encode. |
-| `--media-path PATH` | Cho phép `file://` từ thư mục chỉ định. |
+| `--image-min-tokens`, `--image-max-tokens` | Token ảnh cho dynamic resolution.                            |
+| `--mtmd-batch-max-tokens`                  | Số image token tối đa mỗi batch encode.                      |
+| `--media-path PATH`                        | Cho phép `file://` từ thư mục chỉ định.                      |
 
 Vision + MTP từng có cảnh báo `non-consecutive token position`; đồng thời nhiều slot có thể OOM vì context cũ giữ VRAM. Với vision luôn bắt đầu `--parallel 1`.
 
 ### Chat, reasoning và structured output
 
-| Argument | Ý nghĩa |
-|---|---|
-| `--jinja` | Dùng template Jinja trong GGUF; nên bật/giữ mặc định. |
-| `--chat-template`, `--chat-template-file` | Override template; không làm nếu template GGUF đúng. |
-| `--chat-template-kwargs JSON` | Truyền `reasoning_effort`, `preserve_thinking`, v.v. |
-| `--reasoning on|off|auto` | Bật/tắt thinking. |
-| `--reasoning-effort LEVEL` | Với Qwen dùng `low|medium|xhigh`. |
-| `--reasoning-budget N`, `--reasoning-budget-message` | Giới hạn thinking. |
-| `--reasoning-preserve` | Giữ trace reasoning trong lịch sử; hữu ích cho agent nhưng tốn context. |
-| `--reasoning-format none|deepseek|deepseek-legacy` | Cách trả thought qua API. |
-| `--skip-chat-parsing`, `--prefill-assistant` | Điều khiển parser/prefill nâng cao. |
-| `--grammar`, `--grammar-file` | Ép output theo grammar. |
-| `-j`, `--json-schema`; `-jf`, `--json-schema-file` | Ép JSON theo schema, rất hữu ích cho tool/agent. |
+| Argument                                             | Ý nghĩa                                                                 |
+| ---------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | ------------------------- |
+| `--jinja`                                            | Dùng template Jinja trong GGUF; nên bật/giữ mặc định.                   |
+| `--chat-template`, `--chat-template-file`            | Override template; không làm nếu template GGUF đúng.                    |
+| `--chat-template-kwargs JSON`                        | Truyền `reasoning_effort`, `preserve_thinking`, v.v.                    |
+| `--reasoning on                                      | off                                                                     | auto`            | Bật/tắt thinking.         |
+| `--reasoning-effort LEVEL`                           | Với Qwen dùng `low                                                      | medium           | xhigh`.                   |
+| `--reasoning-budget N`, `--reasoning-budget-message` | Giới hạn thinking.                                                      |
+| `--reasoning-preserve`                               | Giữ trace reasoning trong lịch sử; hữu ích cho agent nhưng tốn context. |
+| `--reasoning-format none                             | deepseek                                                                | deepseek-legacy` | Cách trả thought qua API. |
+| `--skip-chat-parsing`, `--prefill-assistant`         | Điều khiển parser/prefill nâng cao.                                     |
+| `--grammar`, `--grammar-file`                        | Ép output theo grammar.                                                 |
+| `-j`, `--json-schema`; `-jf`, `--json-schema-file`   | Ép JSON theo schema, rất hữu ích cho tool/agent.                        |
 
 ### Sampling
 
@@ -331,12 +331,12 @@ Các model dưới đây đều bắt nguồn từ `Qwen/Qwen3.8-27B`, nhưng đ
 
 ### 7.1. Bảng so sánh
 
-| Repository | Đặc điểm chính | Refusal/KL được công bố | MTP | Vision | Quant có sẵn |
-|---|---|---|---|---|---|
-| [`JonathanColetti/Qwen3.8-27B-Uncensored-GGUF`](https://huggingface.co/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF) | Heretic tối ưu refusal và KL; tài liệu kiểm chứng chi tiết | 12/100; KL 0.1191 | Có bản tích hợp và draft rời | Có projector | IQ2_M, IQ4_XS, Q4_K_M, Q5_K_M, Q6_K, Q8_0 |
-| [`0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF`](https://huggingface.co/0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF) | RVN, thêm hai lượt ARA trên checkpoint ARA có sẵn | 0–1/100; KL 0.0085 | Không, build với `--no-nextn` | Không có projector trong repo | IQ1 đến F16/BF16 |
-| [`Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF`](https://huggingface.co/Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF) | Standard K-quant, multimodal, execution prompt nhúng trong template | 11/450 (2.4%), theo residual funnel | Có, nhúng trong model | Có projector F16/Q8_0 | Q2_K đến Q8_0, không có IQ/imatrix |
-| [`0xKitkat/Qwen3.8-27B-Uncensored-Aggressive`](https://huggingface.co/0xKitkat/Qwen3.8-27B-Uncensored-Aggressive) | Rank-5 ablation, sửa cả `lm_head`; template ép đóng thinking | Không có benchmark harmful đầy đủ | Có, giữ nguyên | Có projector F16 | Q4_K_M, Q5_K_M, Q6_K hỗn hợp |
+| Repository                                                                                                                                      | Đặc điểm chính                                                      | Refusal/KL được công bố             | MTP                           | Vision                        | Quant có sẵn                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------- | ----------------------------- | ----------------------------- | ----------------------------------------- |
+| [`JonathanColetti/Qwen3.8-27B-Uncensored-GGUF`](https://huggingface.co/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF)                             | Heretic tối ưu refusal và KL; tài liệu kiểm chứng chi tiết          | 12/100; KL 0.1191                   | Có bản tích hợp và draft rời  | Có projector                  | IQ2_M, IQ4_XS, Q4_K_M, Q5_K_M, Q6_K, Q8_0 |
+| [`0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF`](https://huggingface.co/0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF) | RVN, thêm hai lượt ARA trên checkpoint ARA có sẵn                   | 0–1/100; KL 0.0085                  | Không, build với `--no-nextn` | Không có projector trong repo | IQ1 đến F16/BF16                          |
+| [`Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF`](https://huggingface.co/Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF)                               | Standard K-quant, multimodal, execution prompt nhúng trong template | 11/450 (2.4%), theo residual funnel | Có, nhúng trong model         | Có projector F16/Q8_0         | Q2_K đến Q8_0, không có IQ/imatrix        |
+| [`0xKitkat/Qwen3.8-27B-Uncensored-Aggressive`](https://huggingface.co/0xKitkat/Qwen3.8-27B-Uncensored-Aggressive)                               | Rank-5 ablation, sửa cả `lm_head`; template ép đóng thinking        | Không có benchmark harmful đầy đủ   | Có, giữ nguyên                | Có projector F16              | Q4_K_M, Q5_K_M, Q6_K hỗn hợp              |
 
 ### 7.2. JonathanColetti Uncensored
 
@@ -426,13 +426,13 @@ Repository chỉ công bố smoke test chat, không có HarmBench đầy đủ. 
 
 Bảng này bổ sung năm repository khác. Riêng **DavidAU Cold Fusion không phải model abliterated/uncensored**; đó là một bản fine-tune tập trung vào năng lực và giảm số thinking token, nên không đặt các tuyên bố của nó cạnh tỷ lệ refusal của bốn model còn lại.
 
-| Repository | Loại biến thể | MTP | Vision | Điểm nổi bật |
-|---|---|---|---|---|
-| [`orcarouter/Qwen3.8-27B-Uncensored-GGUF`](https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-GGUF) | Abliteration refusal direction | Có trong mọi quant | `mmproj` F16 | Dải Q2/F16 và IQ; benchmark refusal/capability khá rộng |
-| [`DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF`](https://huggingface.co/DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF) | Fine-tune GAIN + Unsloth, **không Heretic** | Có file thường và file MTP riêng | Có `mmproj` | Giảm thinking token; NEO imatrix; một phần output giữ F16 |
-| [`HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF`](https://huggingface.co/HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF) | Aggressive uncensoring | Embedded MTP; FastMTP tùy chọn | `mmproj` BF16 | K_P custom quants; FastMTP cần patch runtime |
-| [`huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF`](https://huggingface.co/huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF) | Abliteration proof-of-concept | Được ghi là không sửa | Vision không sửa | 15 layer đầu giữ nguyên; mixed-precision `K_L` không chuẩn |
-| [`dealignai/Qwen3.8-27B-CRACK-GGUF`](https://huggingface.co/dealignai/Qwen3.8-27B-CRACK-GGUF) | CRACK abliteration | Có và được sửa đồng bộ với target | `mmproj` F16 | Benchmark theo từng quant; bảo vệ SSM gates và MTP ở Q8_0 |
+| Repository                                                                                                                                                      | Loại biến thể                               | MTP                               | Vision           | Điểm nổi bật                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------- | ---------------- | ---------------------------------------------------------- |
+| [`orcarouter/Qwen3.8-27B-Uncensored-GGUF`](https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-GGUF)                                                       | Abliteration refusal direction              | Có trong mọi quant                | `mmproj` F16     | Dải Q2/F16 và IQ; benchmark refusal/capability khá rộng    |
+| [`DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF`](https://huggingface.co/DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF) | Fine-tune GAIN + Unsloth, **không Heretic** | Có file thường và file MTP riêng  | Có `mmproj`      | Giảm thinking token; NEO imatrix; một phần output giữ F16  |
+| [`HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF`](https://huggingface.co/HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF)           | Aggressive uncensoring                      | Embedded MTP; FastMTP tùy chọn    | `mmproj` BF16    | K_P custom quants; FastMTP cần patch runtime               |
+| [`huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF`](https://huggingface.co/huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF)                                         | Abliteration proof-of-concept               | Được ghi là không sửa             | Vision không sửa | 15 layer đầu giữ nguyên; mixed-precision `K_L` không chuẩn |
+| [`dealignai/Qwen3.8-27B-CRACK-GGUF`](https://huggingface.co/dealignai/Qwen3.8-27B-CRACK-GGUF)                                                                   | CRACK abliteration                          | Có và được sửa đồng bộ với target | `mmproj` F16     | Benchmark theo từng quant; bảo vệ SSM gates và MTP ở Q8_0  |
 
 ### 8.1. OrcaRouter Uncensored
 
@@ -499,3 +499,181 @@ Q4_K_M hoặc IQ4_XS là điểm bắt đầu hợp lý; IQ2_M nhỏ nhất như
 - Muốn aggressive profile, custom K_P và sẵn sàng thử runtime FastMTP đã patch: **HauhauCS**.
 - Muốn proof-of-concept đơn giản hoặc tích hợp Ollama sẵn: **Huihui**.
 - Muốn benchmark theo từng quant và MTP head được ablate đồng bộ: **Dealign CRACK**.
+
+## Lựa chọn biển thể
+
+## Khuyến nghị theo nhu cầu
+
+| Nhu cầu                                         | Nên chọn                                | Lý do                                                                  |
+| ----------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| Production, coding/agent tổng quát              | **Qwen gốc/Unsloth**                    | Ít rủi ro hành vi và tương thích template chuẩn nhất                   |
+| Giảm overthinking nhưng không gỡ safety         | **DavidAU Cold Fusion**                 | Fine-tune nhằm rút ngắn reasoning, không phải abliteration             |
+| Uncensored nhưng ưu tiên giữ năng lực           | **JonathanColetti** hoặc **OrcaRouter** | Có benchmark capability và mô tả quy trình tương đối rõ                |
+| Compliance cao, MTP vẫn hiệu quả                | **Dealign CRACK**                       | Target và MTP head được ablate đồng bộ, benchmark từng quant           |
+| Multimodal, standard quant, dễ chạy             | **Blackfrost**                          | Vision và embedded MTP, không có custom runtime                        |
+| Compliance tối đa cho text, máy ít VRAM         | **0bserverx RVN**                       | Nhiều quant nhỏ, refusal tự công bố rất thấp; đổi lại không MTP/vision |
+| Roleplay/chat trực tiếp nhưng vẫn muốn thinking | **HauhauCS Aggressive**                 | Aggressive profile, embedded MTP, vision và nhiều quant                |
+| Roleplay không thinking/policy preamble         | **0xKitkat v4**                         | Template khóa thinking và tự chèn unrestricted system prompt           |
+| Thử nghiệm/Ollama                               | **Huihui**                              | Dễ thử nhưng ít benchmark, phương pháp proof-of-concept                |
+
+## Đánh giá từng nhóm
+
+### 1. Qwen gốc/Unsloth: lựa chọn mặc định cho production
+
+Tôi vẫn ưu tiên bản chính thức hoặc quant Unsloth khi dùng cho:
+
+- coding agent có quyền chạy lệnh;
+- tool calling, MCP, truy cập filesystem;
+- ứng dụng public;
+- xử lý dữ liệu người dùng;
+- tác vụ yêu cầu reasoning và structured output ổn định.
+
+Các bản uncensored không tự động “thông minh hơn”. Chúng chủ yếu giảm ngưỡng từ chối và đôi khi làm model trả lời tự tin hơn cả khi câu trả lời sai.
+
+### 2. DavidAU Cold Fusion: giảm chi phí reasoning
+
+Nên thử khi Qwen gốc:
+
+- suy nghĩ quá dài;
+- tiêu tốn nhiều context;
+- trả lời vòng vo;
+- latency cao do reasoning token.
+
+Đây là fine-tune nên cần A/B test với base trên coding, tool call và tiếng Việt. Dùng bản **MTP** nếu acceptance ổn định trên 50%; nếu thấp hơn, dùng GGUF thường.
+
+Tôi không xem các tuyên bố “thông minh hơn base” là mặc định đúng cho mọi workload cho đến khi tự benchmark.
+
+### 3. JonathanColetti: lựa chọn uncensored thận trọng
+
+Phù hợp cho nghiên cứu, creative writing hoặc hệ thống nội bộ khi muốn:
+
+- thay đổi trọng số tương đối có kiểm soát;
+- MTP được kiểm tra đủ block;
+- có perplexity và benchmark capability;
+- có cả embedded MTP và draft riêng.
+
+Đây là lựa chọn đầu tiên của tôi nếu ưu tiên **provenance và khả năng tái kiểm tra**, nhưng nó vẫn còn một tỷ lệ refusal nhất định.
+
+Nên bắt đầu bằng `Q6_K`; sau đó dùng `Q5_K_M` hoặc `Q4_K_M` nếu cần thêm context. Không đánh giá hành vi model chỉ từ IQ2_M.
+
+### 4. OrcaRouter: lựa chọn uncensored đa dụng
+
+OrcaRouter phù hợp nếu cần:
+
+- thinking on/off đúng template Qwen;
+- text, vision và tool calling;
+- embedded MTP;
+- nhiều standard/IQ quant;
+- benchmark refusal, over-refusal và capability tương đối rộng.
+
+Đây có thể là lựa chọn cân bằng tốt cho một server nghiên cứu multimodal. Tuy vậy, benchmark refusal dùng opening-phrase classifier nên có thể bỏ sót những câu trả lời từ chối tinh vi hoặc compliance không thực chất.
+
+### 5. Dealign CRACK: compliance cao và MTP đồng bộ
+
+Tôi sẽ chọn CRACK cho:
+
+- red-team có kiểm soát;
+- nghiên cứu refusal;
+- workload mà draft MTP cũng phải theo hành vi của target;
+- cần số liệu theo từng quant.
+
+Điểm đáng chú ý là MTP head cũng được sửa, còn các tensor recurrence quan trọng được giữ Q8. Điều này hợp lý hơn việc ghép target uncensored với draft chưa sửa.
+
+`Q4_K_M` hoặc `IQ4_XS` là điểm bắt đầu tốt. Không mặc định dùng `n-max 4`; benchmark `none`, `2`, `3`, `4` trên prompt thật.
+
+### 6. Blackfrost: dễ triển khai multimodal
+
+Nên dùng khi muốn:
+
+- standard K-quants;
+- embedded MTP một file;
+- vision/video;
+- không muốn custom patch hay cách quant đặc biệt.
+
+Đây là lựa chọn vận hành đơn giản. Tuy nhiên con số refusal 11/450 không phải full run mới trên từng GGUF cuối cùng, nên cần tự benchmark lại.
+
+Giữ `--jinja`, vì execution prompt nằm trong template.
+
+### 7. 0bserverx RVN: ưu tiên compliance và bộ nhớ thấp
+
+Phù hợp cho:
+
+- text-only;
+- creative writing/roleplay;
+- máy 8–16 GB;
+- không cần native MTP;
+- muốn thử IQ1/IQ2/IQ3.
+
+Không phù hợp nếu mục tiêu là vision hoặc speculative decoding native. Với production mới, phải chọn file `RVN-*`, tránh file Q4 legacy.
+
+Các quant IQ1/IQ2 chỉ nên dùng khi giới hạn bộ nhớ bắt buộc. Với coding nên ưu tiên ít nhất IQ3/Q4.
+
+### 8. HauhauCS Aggressive: roleplay và tốc độ MTP
+
+Nên dùng cho:
+
+- roleplay/creative writing;
+- câu trả lời trực tiếp, ít preamble;
+- vẫn muốn thinking mode;
+- multimodal;
+- muốn thử custom K_P.
+
+Embedded MTP chạy với upstream `llama.cpp` là lựa chọn an toàn. Chỉ dùng FastMTP khi:
+
+- chấp nhận duy trì fork `llama.cpp`;
+- pin đúng commit và patch;
+- xác minh sidecar;
+- benchmark cho đúng GPU/workload.
+
+Tôi không khuyến nghị đưa runtime patched này vào production chỉ vì con số tốc độ tối đa trên RTX PRO 6000.
+
+### 9. 0xKitkat v4: roleplay không thinking
+
+Phù hợp cho:
+
+- LM Studio;
+- chat/roleplay;
+- câu trả lời ngắn và trực tiếp;
+- tránh policy monologue;
+- không cần chain-of-thought dài.
+
+Không nên là lựa chọn đầu tiên cho:
+
+- toán/reasoning khó;
+- coding agent dài hạn;
+- structured output nghiêm ngặt;
+- tác vụ cần thinking mode gốc.
+
+Lý do là template khóa thinking và model sửa cả `lm_head`. Cần dùng template bên trong GGUF; không áp cấu hình `--reasoning on` từ model gốc.
+
+### 10. Huihui: thử nghiệm hơn là triển khai chính
+
+Phù hợp để thử nhanh qua Ollama hoặc nghiên cứu mixed precision. Tôi sẽ không chọn làm model production trước khi tự xác minh:
+
+- số block MTP;
+- vision projector;
+- refusal rate;
+- reasoning/coding;
+- long-context;
+- kích thước thực của các quant `K_L`.
+
+## Theo VRAM
+
+- **32–40 GB:** Q6_K/Q8_0; Q6 thường là điểm cân bằng tốt hơn cho context.
+- **24 GB:** Q4_K_M hoặc Q5_K_M, chừa ít nhất 3–5 GB cho KV/buffer.
+- **16 GB:** IQ4_XS hoặc Q3; coding/reasoning sẽ bắt đầu suy giảm.
+- **12 GB:** IQ2/IQ3, ưu tiên RVN/Orca/CRACK có lựa chọn nhỏ; nên giảm context.
+- **8 GB:** chỉ quant cực thấp hoặc partial CPU offload; không phù hợp agent nghiêm túc.
+
+## Lựa chọn cá nhân của tôi
+
+Nếu chỉ chọn một model cho mỗi nhóm:
+
+1. **Production an toàn:** Qwen gốc/Unsloth.
+2. **Giảm overthinking:** DavidAU Cold Fusion.
+3. **Uncensored thận trọng:** JonathanColetti.
+4. **Uncensored đa dụng multimodal:** OrcaRouter.
+5. **Compliance cao + MTP:** Dealign CRACK.
+6. **Roleplay có thinking:** HauhauCS.
+7. **Roleplay không thinking:** 0xKitkat.
+8. **Text-only, VRAM thấp:** RVN.
