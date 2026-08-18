@@ -322,3 +322,102 @@ curl http://127.0.0.1:8080/health
 ```
 
 Nếu prefill đột ngột chỉ còn vài chục tok/s trong khi GPU không bận, nghi ngờ KV Flash Attention hoặc tensor đã rơi về CPU. Nếu decode chỉ còn 1–10 tok/s, kiểm tra model có thực sự vừa hoàn toàn trong VRAM hay không trước khi chỉnh sampler.
+
+## 7. Các biến thể Qwen3.8-27B đã giảm safety/refusal
+
+Các model dưới đây đều bắt nguồn từ `Qwen/Qwen3.8-27B`, nhưng đã sửa trọng số để giảm hành vi từ chối. Chúng không chỉ là các bản quant khác nhau của cùng một checkpoint: phương pháp abliteration, chat template, MTP, vision và mức độ thay đổi so với base đều khác nhau.
+
+> Các số refusal/KL dưới đây do từng repository tự công bố. Chúng dùng dataset, prompt, template, chế độ thinking và cách chấm khác nhau, vì vậy **không được so sánh trực tiếp như một leaderboard**. Việc giảm refusal cũng không bảo đảm giữ nguyên reasoning, coding, tool calling hoặc tính đúng đắn.
+
+### 7.1. Bảng so sánh
+
+| Repository | Đặc điểm chính | Refusal/KL được công bố | MTP | Vision | Quant có sẵn |
+|---|---|---|---|---|---|
+| [`JonathanColetti/Qwen3.8-27B-Uncensored-GGUF`](https://huggingface.co/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF) | Heretic tối ưu refusal và KL; tài liệu kiểm chứng chi tiết | 12/100; KL 0.1191 | Có bản tích hợp và draft rời | Có projector | IQ2_M, IQ4_XS, Q4_K_M, Q5_K_M, Q6_K, Q8_0 |
+| [`0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF`](https://huggingface.co/0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF) | RVN, thêm hai lượt ARA trên checkpoint ARA có sẵn | 0–1/100; KL 0.0085 | Không, build với `--no-nextn` | Không có projector trong repo | IQ1 đến F16/BF16 |
+| [`Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF`](https://huggingface.co/Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF) | Standard K-quant, multimodal, execution prompt nhúng trong template | 11/450 (2.4%), theo residual funnel | Có, nhúng trong model | Có projector F16/Q8_0 | Q2_K đến Q8_0, không có IQ/imatrix |
+| [`0xKitkat/Qwen3.8-27B-Uncensored-Aggressive`](https://huggingface.co/0xKitkat/Qwen3.8-27B-Uncensored-Aggressive) | Rank-5 ablation, sửa cả `lm_head`; template ép đóng thinking | Không có benchmark harmful đầy đủ | Có, giữ nguyên | Có projector F16 | Q4_K_M, Q5_K_M, Q6_K hỗn hợp |
+
+### 7.2. JonathanColetti Uncensored
+
+Đây là lựa chọn bảo thủ hơn nếu cần giữ model gần base và muốn có số liệu kỹ thuật để kiểm tra:
+
+- Heretic sửa chủ yếu `attn.o_proj` và `mlp.down_proj`; LoRA được merge vào BF16 rồi mới chuyển/quantize.
+- MTP bị mất trong bước qua Transformers đã được chép lại từ base. Tác giả kiểm tra đủ 65/65 block sau quantization, thay vì chỉ dựa vào metadata.
+- Có hai cách chạy: GGUF fused chứa MTP, hoặc file `noMTP` ghép với `draft-Q8_0` riêng.
+- Benchmark BF16 công bố mức giảm trung bình khoảng 0.5 điểm trên MMLU, ARC-Challenge, HellaSwag và Winogrande. Perplexity cho thấy IQ2_M suy giảm rõ hơn các quant còn lại.
+
+Với file fused, có thể giữ cấu hình MTP ở mục 1 và 3. Ví dụ model Q4:
+
+```bash
+-hf JonathanColetti/Qwen3.8-27B-Uncensored-GGUF:Q4_K_M \
+--spec-type draft-mtp --spec-draft-n-max 2
+```
+
+Không giả định build `llama.cpp` cũ sẽ dùng MTP: repository yêu cầu phiên bản có hỗ trợ native MTP tương ứng. Để đánh giá chất lượng/refusal nên ưu tiên Q6_K hoặc Q8_0 trước khi kết luận từ IQ2_M.
+
+### 7.3. 0bserverx RVN Heretic Abliterated
+
+RVN bắt đầu từ `trohrbaugh/Qwen3.8-27B-heretic-ara`, sau đó áp dụng thêm hai lượt full-weight ARA. Repository công bố mức refusal thấp nhất trong bốn lựa chọn và có dải quant rộng nhất, phù hợp cả máy rất ít RAM/VRAM.
+
+Khác biệt vận hành quan trọng là các file RVN **không chứa NextN/MTP**. Không sao chép nguyên cấu hình MTP ở mục 1 sang model này:
+
+```bash
+./llama.cpp/llama-server \
+  -hf 0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF \
+  --hf-file RVN-Q4_K_M.gguf \
+  --spec-type none --no-mmproj \
+  --jinja -c 65536 -ngl all
+```
+
+Repository còn giữ một file Q4 legacy có tên gần giống model cũ; khi triển khai mới nên chọn file bắt đầu bằng `RVN-`. Một bản `RVN-IQ3_M` từng có tensor hỏng và đã được upload lại, vì vậy cache/download cũ cần được xóa và kiểm tra checksum nếu gặp output bất thường.
+
+### 7.4. Blackfrost Abliterated
+
+Blackfrost phù hợp khi cần standard K-quant, vision và MTP trong một file:
+
+- Chín main GGUF từ Q2_K đến Q8_0 đều chứa block MTP thứ 65; không dùng draft sidecar.
+- Vision dùng một trong hai file `mmproj-Qwen3.8-27B-ABLITERATED-F16.gguf` hoặc `mmproj-Qwen3.8-27B-ABLITERATED-Q8_0.gguf`.
+- Short execution prompt được nhúng trong Jinja template. Phải giữ `--jinja`; prompt này chỉ là hướng dẫn hành vi, không phải lớp bảo mật.
+- Không có IQ/imatrix quant. Q4_K_M khoảng 16.8 GB là lựa chọn mặc định của repository.
+
+Ví dụ text-only:
+
+```bash
+./llama.cpp/llama-server \
+  -hf Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF:Q4_K_M \
+  --no-mmproj --jinja -ngl all -c 65536 \
+  --spec-type draft-mtp --spec-draft-n-max 2
+```
+
+Số 11/450 không phải một lần chạy mới toàn bộ 450 case trên từng GGUF cuối cùng. Đó là residual funnel nhiều vòng trên derivative W4A4 của cùng BF16 parent, có thay prompt giữa các vòng; chỉ nên xem là mô tả của quy trình tác giả.
+
+### 7.5. 0xKitkat Uncensored Aggressive v4
+
+Biến thể này ưu tiên hành vi trả lời ngay trong LM Studio/`llama-server`, thay vì giữ thinking mode chuẩn:
+
+- Xây refusal basis rank-5 từ unembedding, sửa các residual writer, một phần input projection và cả `output.weight`/`lm_head`.
+- Template nhúng sẵn luôn mở rồi đóng `<think>` rỗng, đồng thời chèn unrestricted system prompt nếu request không có system message.
+- MTP và vision tower được giữ nguyên; projector `mmproj-F16.gguf` là tùy chọn.
+- Chỉ có Q4_K_M, Q5_K_M và Q6_K. Các file là requant từ cùng một Q6 bake; bản Q6 lớn khoảng 27.5 GB vì các tensor đã ablate và `lm_head` được giữ Q8_0.
+
+Không dùng cấu hình `--reasoning on --reasoning-effort medium` ở mục 1 nếu muốn đúng hành vi thiết kế của v4. Giữ template trong GGUF và dùng sampler non-thinking:
+
+```bash
+./llama.cpp/llama-server \
+  -hf 0xKitkat/Qwen3.8-27B-Uncensored-Aggressive:Q4_K_M \
+  --no-mmproj --jinja --reasoning off -ngl all -c 65536 \
+  --spec-type draft-mtp --spec-draft-n-max 2 \
+  --temp 0.7 --top-p 0.8 --top-k 20 --presence-penalty 1.5
+```
+
+Repository chỉ công bố smoke test chat, không có HarmBench đầy đủ. Do mức sửa `lm_head` mạnh hơn và thinking bị khóa đóng, cần tự benchmark reasoning, code, tiếng Việt, structured output và tool calling trước khi dùng production.
+
+### 7.6. Chọn nhanh
+
+- Ưu tiên gần base, số liệu và provenance chi tiết, MTP được kiểm tra: **JonathanColetti**.
+- Ưu tiên mức compliance tự công bố cao và nhiều quant rất nhỏ, không cần MTP/vision: **0bserverx RVN**.
+- Ưu tiên multimodal, standard quant và MTP một file: **Blackfrost**.
+- Ưu tiên chat/roleplay trả lời trực tiếp, không policy preamble và chấp nhận tắt thinking: **0xKitkat v4**.
+
+Để so sánh công bằng, tải cùng cấp quant (tốt nhất Q5_K_M hoặc Q6_K), dùng cùng phiên bản `llama.cpp`, sampler, context và một bộ prompt riêng gồm reasoning, coding, tiếng Việt, vision/tool call và các case refusal mong muốn. Không dùng template của model này để chấm model khác.
