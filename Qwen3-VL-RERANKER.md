@@ -21,7 +21,6 @@ curl http://localhost:4000/embeddings \
   }'
 ```
 
-
 ## Qwen3-VL-Reranker-2B
 
 ```bash
