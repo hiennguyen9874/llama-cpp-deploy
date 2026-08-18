@@ -77,6 +77,50 @@ BF16 của model khoảng 55 GB nên **không vừa** một A100 40 GB. Nên dù
   --cache-prompt --cache-ram 16384 --ctx-checkpoints 32
 ```
 
+- With vision:
+
+```bash
+./llama.cpp/llama-server \
+  -hf unsloth/Qwen3.8-27B-GGUF:UD-Q6_K_XL \
+  --device CUDA0 \
+  --host 0.0.0.0 \
+  --port 8080 \
+  --alias qwen3.8-27b \
+  --n-gpu-layers all \
+  --gpu-layers-draft all \
+  --fit off \
+  --ctx-size 65536 \
+  --parallel 1 \
+  --kv-unified \
+  --flash-attn on \
+  --cache-type-k q8_0 \
+  --cache-type-v q8_0 \
+  --cache-type-k-draft q8_0 \
+  --cache-type-v-draft q8_0 \
+  --batch-size 1024 \
+  --ubatch-size 256 \
+  --spec-type draft-mtp \
+  --spec-draft-n-max 2 \
+  --spec-draft-p-min 0.0 \
+  --image-min-tokens 1024 \
+  --image-max-tokens 4096 \
+  --mtmd-batch-max-tokens 4096 \
+  --jinja \
+  --reasoning on \
+  --reasoning-effort medium \
+  --reasoning-preserve \
+  --reasoning-budget 8192 \
+  --temp 1.0 \
+  --top-p 0.95 \
+  --top-k 20 \
+  --min-p 0.0 \
+  --presence-penalty 0.0 \
+  --repeat-penalty 1.0 \
+  --cache-prompt \
+  --cache-ram 8192 \
+  --ctx-checkpoints 16
+```
+
 A100 có băng thông bộ nhớ lớn nhưng không có lợi thế kernel Blackwell. Không dùng biến môi trường workaround dành cho RTX 50 nếu không gặp lỗi. Tệp nguồn chỉ có số A100 80 GB chạy **vLLM**, vì vậy không nên lấy con số 18 tok/s trong đó làm dự đoán cho A100 40 GB chạy `llama.cpp` GGUF.
 
 ## 2. Cách chọn model, context và KV cache
