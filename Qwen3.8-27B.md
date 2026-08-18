@@ -421,3 +421,81 @@ Repository chỉ công bố smoke test chat, không có HarmBench đầy đủ. 
 - Ưu tiên chat/roleplay trả lời trực tiếp, không policy preamble và chấp nhận tắt thinking: **0xKitkat v4**.
 
 Để so sánh công bằng, tải cùng cấp quant (tốt nhất Q5_K_M hoặc Q6_K), dùng cùng phiên bản `llama.cpp`, sampler, context và một bộ prompt riêng gồm reasoning, coding, tiếng Việt, vision/tool call và các case refusal mong muốn. Không dùng template của model này để chấm model khác.
+
+## 8. Các biến thể bổ sung
+
+Bảng này bổ sung năm repository khác. Riêng **DavidAU Cold Fusion không phải model abliterated/uncensored**; đó là một bản fine-tune tập trung vào năng lực và giảm số thinking token, nên không đặt các tuyên bố của nó cạnh tỷ lệ refusal của bốn model còn lại.
+
+| Repository | Loại biến thể | MTP | Vision | Điểm nổi bật |
+|---|---|---|---|---|
+| [`orcarouter/Qwen3.8-27B-Uncensored-GGUF`](https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-GGUF) | Abliteration refusal direction | Có trong mọi quant | `mmproj` F16 | Dải Q2/F16 và IQ; benchmark refusal/capability khá rộng |
+| [`DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF`](https://huggingface.co/DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF) | Fine-tune GAIN + Unsloth, **không Heretic** | Có file thường và file MTP riêng | Có `mmproj` | Giảm thinking token; NEO imatrix; một phần output giữ F16 |
+| [`HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF`](https://huggingface.co/HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF) | Aggressive uncensoring | Embedded MTP; FastMTP tùy chọn | `mmproj` BF16 | K_P custom quants; FastMTP cần patch runtime |
+| [`huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF`](https://huggingface.co/huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF) | Abliteration proof-of-concept | Được ghi là không sửa | Vision không sửa | 15 layer đầu giữ nguyên; mixed-precision `K_L` không chuẩn |
+| [`dealignai/Qwen3.8-27B-CRACK-GGUF`](https://huggingface.co/dealignai/Qwen3.8-27B-CRACK-GGUF) | CRACK abliteration | Có và được sửa đồng bộ với target | `mmproj` F16 | Benchmark theo từng quant; bảo vệ SSM gates và MTP ở Q8_0 |
+
+### 8.1. OrcaRouter Uncensored
+
+OrcaRouter chuyển checkpoint abliterated FP8 của họ sang GGUF. README mô tả phương pháp là trực giao hóa refusal direction khỏi residual stream.
+
+- Standard quants: Q2_K đến Q8_0 và F16 hai shard; thêm IQ4_XS, IQ3_M/XXS và IQ2_M/XXS dùng imatrix Anh + Trung.
+- Mọi text quant giữ MTP/NextN; vision dùng `mmproj-Qwen3.8-27B-Uncensored-f16.gguf` khoảng 0.9 GB.
+- Thinking vẫn theo template gốc và có thể bật/tắt qua `enable_thinking`; không bị khóa tắt như 0xKitkat v4.
+- Trên checkpoint FP8, repository công bố harmful refusal khoảng 0–6% tùy bộ test, XSTest-safe over-refusal 0.4% khi thinking off, và capability lệch tối đa khoảng 1.3 điểm trên các bài họ chạy. Bộ phân loại refusal dựa vào opening phrase, không phải LLM judge; đây cũng không phải số đo riêng của từng GGUF quant.
+
+Q4_K_M khoảng 16.8 GB là mặc định hợp lý. Có thể dùng cấu hình MTP chuẩn của mục 1; thêm `--mmproj` khi cần ảnh.
+
+### 8.2. DavidAU Cold Fusion GAIN V1.1
+
+Đây là lựa chọn cho người muốn **fine-tune năng lực**, không phải để loại safety alignment. README ghi rõ model là `non heretic`.
+
+- COLD FUSION kết hợp phương pháp GAIN với trainer Unsloth, dùng các dataset `Polar-STRICT` và `Reasoning-STRICT`.
+- Mục tiêu chính là cải thiện instruction following/problem solving và rút thinking block còn khoảng 1/10–1/2 so với Qwen3.8 gốc theo tuyên bố của tác giả.
+- Có GGUF thường và GGUF có hậu tố `MTP`. Bản MTP giữ tensor draft ở Q8_0; tất cả quant dùng NEO imatrix và giữ một phần `output` ở F16, nên kích thước/độ chính xác không tương đương quant chuẩn cùng tên.
+- Hai bản `LOW` (IQ4_XS và Q6_K) bỏ MTP/OT modifications để ưu tiên tốc độ/VRAM.
+- Vision cần tải `mmproj` riêng. Ba mức reasoning vẫn là `low`, `medium`, `xhigh`.
+
+Tác giả báo trên RTX 5090 bản Q4_K_S thường khoảng 75 tok/s, MTP có thể vượt 90 tok/s với acceptance khoảng 60%, nhưng khuyên quay về bản thường nếu acceptance dưới 50%. Đây là số tham khảo từ LM Studio/Windows, không phải phép đo cùng harness với mục 1.
+
+### 8.3. HauhauCS Aggressive MTP
+
+HauhauCS hướng tới câu trả lời trực tiếp, ít preamble và công bố **0/465 refusals**, nhưng README không trình bày protocol chi tiết tương đương các bảng benchmark của OrcaRouter hoặc CRACK.
+
+- Có IQ2_M đến IQ4_XS và custom `Q2_K_P` đến `Q8_K_P`. K_P là profile mixed precision riêng từng model, thường lớn hơn quant nền; UI có thể hiển thị quant là `?` dù GGUF vẫn load được.
+- Mỗi target GGUF có embedded MTP và chạy được bằng upstream `llama.cpp` với `--spec-type draft-mtp`.
+- Vision dùng projector BF16 khoảng 931 MB.
+- Có thêm draft `FastMTP-32K` khoảng 903 MB. FastMTP **không chạy bằng upstream binary nguyên bản**: phải checkout commit được chỉ định và áp dụng patch HauhauCS. Nếu không muốn duy trì fork, chỉ dùng embedded MTP.
+- Benchmark FastMTP trên RTX PRO 6000 Blackwell 96 GB công bố tối đa 3.02x document TG so với tắt MTP và nhanh hơn embedded MTP tối đa 35.2%; kết quả phụ thuộc mạnh vào quant, prompt, depth và phần cứng.
+
+Đối với production thông thường, bắt đầu bằng embedded MTP `n=2`. Chỉ thử FastMTP `n=3` sau khi chấp nhận vận hành một runtime đã patch và đã xác minh manifest/chữ ký của sidecar.
+
+### 8.4. Huihui Abliterated
+
+Huihui là triển khai proof-of-concept đơn giản dựa trên `remove-refusals-with-transformers`:
+
+- Không ablate 15 layer đầu; README nói MTP và phần visual không bị sửa.
+- Các tensor quan trọng/đã ablate như `token_embd`, `output`, `ffn_down`, `ssm_out`, `attn_output` được giữ Q8_0 trong các bản Q2–Q6 và BF16 trong `Q8_0_L`.
+- Hậu tố `K_L` biểu thị mixed precision này, không phải standard K-quant. Vì vậy `Q2_K_L` có thể lớn hơn cả Q3_K hoặc Q4_K.
+- README không cung cấp benchmark refusal, capability, MTP acceptance hay projector cụ thể; không nên suy ra mức chất lượng chỉ từ tên `abliterated`.
+
+Đây là lựa chọn dễ thử qua Ollama (`huihui_ai/Qwen3.8-abliterated`), nhưng cần tự kiểm tra GGUF thực tế có đủ block MTP và tìm đúng projector trước khi dùng các cờ MTP/vision của tài liệu này.
+
+### 8.5. Dealign CRACK
+
+CRACK là biến thể có kiểm thử riêng cho từng quant và chủ động sửa cả target lẫn MTP head để draft không tiếp tục đề xuất refusal token.
+
+- Dải file gồm IQ2_M, IQ3_M, IQ4_XS, Q4_K_M, Q6_K, Q6_K_L và Q8_0; vision/video dùng `mmproj-Qwen3.8-27B-f16.gguf`.
+- Mọi sub-8-bit quant dùng imatrix. `ssm_alpha`/`ssm_beta` và block MTP được giữ Q8_0 để hạn chế bất ổn long-context và giữ acceptance.
+- HarmBench-240 thinking-off công bố compliance 97.5–98.8% tùy quant, không có output gibberish trong harness. MMLU của CRACK thường giảm khoảng 0.2–3.8 điểm so với base cùng quant.
+- README ghi dòng IQ3_M là `83.4 → 81.6` nhưng cột delta lại để `+1.8`; theo phép tính phải là **−1.8 điểm**.
+- MTP acceptance công bố khoảng 50.5–53.3%. README ví dụ `n-max 4`, nhưng acceptance không chứng minh depth 4 nhanh nhất trên GPU khác; vẫn nên sweep `2`, `3`, `4` và `none`.
+
+Q4_K_M hoặc IQ4_XS là điểm bắt đầu hợp lý; IQ2_M nhỏ nhất nhưng có mức giảm MMLU lớn nhất trong bảng của repository.
+
+### 8.6. Chọn thêm theo mục tiêu
+
+- Muốn uncensored model có benchmark refusal, over-refusal và capability rộng: **OrcaRouter**.
+- Muốn fine-tune giảm overthinking nhưng không chủ đích gỡ safety: **DavidAU Cold Fusion**.
+- Muốn aggressive profile, custom K_P và sẵn sàng thử runtime FastMTP đã patch: **HauhauCS**.
+- Muốn proof-of-concept đơn giản hoặc tích hợp Ollama sẵn: **Huihui**.
+- Muốn benchmark theo từng quant và MTP head được ablate đồng bộ: **Dealign CRACK**.
