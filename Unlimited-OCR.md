@@ -64,11 +64,13 @@ Dung lượng RAM/VRAM thực tế còn phải cộng projector, KV cache và b�
 ```bash
 ./llama.cpp/llama-server \
   --hf-repo sahilchachra/Unlimited-OCR-GGUF \
-  --hf-file Unlimited-OCR-Q4_K_M.gguf \
+  --hf-file Unlimited-OCR-Q5_K_M.gguf \
   --alias Unlimited-OCR \
   --ctx-size 32768 \
-  --n-predict 16384 \
   --host 0.0.0.0 --port 8080 \
+  --batch-size 2048 --ubatch-size 512 \
+  --reasoning off \
+  --chat-template-kwargs '{"enable_thinking":false}' \
   --n-gpu-layers all \
   --flash-attn on \
   --parallel 1 \
@@ -82,19 +84,21 @@ Nếu llama.cpp không tự tìm được projector, chỉ rõ URL của project
 ```bash
 ./llama.cpp/llama-server \
   --hf-repo sahilchachra/Unlimited-OCR-GGUF \
-  --hf-file Unlimited-OCR-Q4_K_M.gguf \
+  --hf-file Unlimited-OCR-Q5_K_M.gguf \
   --mmproj-url https://huggingface.co/sahilchachra/Unlimited-OCR-GGUF/resolve/main/mmproj-Unlimited-OCR-F16.gguf \
   --alias Unlimited-OCR \
   --ctx-size 32768 \
-  --n-predict 16384 \
   --host 0.0.0.0 --port 8080 \
+  --batch-size 2048 --ubatch-size 512 \
+  --reasoning off \
+  --chat-template-kwargs '{"enable_thinking":false}' \
   --n-gpu-layers all \
   --flash-attn on \
   --parallel 1 \
   --temp 0
 ```
 
-Có thể đổi `Unlimited-OCR-Q4_K_M.gguf` sang quant khác có trong repository. Với repository riêng tư, đặt token trước khi chạy:
+Có thể đổi `Unlimited-OCR-Q5_K_M.gguf` sang quant khác có trong repository. Với repository riêng tư, đặt token trước khi chạy:
 
 ```bash
 export HF_TOKEN=hf_...
@@ -108,7 +112,7 @@ Nếu muốn cấm mọi truy cập mạng và chỉ dùng file đã có trong c
 
 ```bash
 ./llama.cpp/llama-server \
-  --model models/Unlimited-OCR/Unlimited-OCR-Q4_K_M.gguf \
+  --model models/Unlimited-OCR/Unlimited-OCR-Q5_K_M.gguf \
   --mmproj models/Unlimited-OCR/mmproj-Unlimited-OCR-F16.gguf \
   --alias Unlimited-OCR \
   --ctx-size 32768 \
@@ -126,7 +130,7 @@ Nếu muốn cấm mọi truy cập mạng và chỉ dùng file đã có trong c
 
 ```bash
 ./llama.cpp/llama-server \
-  -m models/Unlimited-OCR/Unlimited-OCR-Q4_K_M.gguf \
+  -m models/Unlimited-OCR/Unlimited-OCR-Q5_K_M.gguf \
   --mmproj models/Unlimited-OCR/mmproj-Unlimited-OCR-F16.gguf \
   --alias Unlimited-OCR \
   -c 8192 -n 4096 \
@@ -141,6 +145,22 @@ OCR trên CPU sẽ chậm hơn đáng kể. Kiểm tra server sau khi khởi đ�
 ```bash
 curl http://127.0.0.1:8080/health
 ```
+
+### OCR trực tiếp một ảnh bằng `llama-cli`
+
+Không cần khởi động HTTP server nếu chỉ muốn xử lý ảnh `scripts/test.png` một lần:
+
+```bash
+./llama.cpp/llama-cli \
+  --hf-repo sahilchachra/Unlimited-OCR-GGUF \
+  --hf-file Unlimited-OCR-Q5_K_M.gguf \
+  --image scripts/test.png \
+  -p "document parsing." \
+  -n 8192 \
+  --temp 0
+```
+
+Bỏ `<|grounding|>` hoặc đổi prompt thành `document parsing.` nếu không cần các thẻ bounding box.
 
 ## 4. OCR một ảnh qua API
 
@@ -169,7 +189,6 @@ Trên macOS, thay `base64 -w0 document.png` bằng `base64 < document.png | tr -
 
 ### Các prompt hữu ích
 
-
 | Nhu cầu                                          | Prompt                           |
 | ------------------------------------------------ | -------------------------------- |
 | Parse tài liệu theo prompt gốc của Unlimited-OCR | `document parsing.`              |
@@ -179,7 +198,6 @@ Trên macOS, thay `base64 -w0 document.png` bằng `base64 < document.png | tr -
 | Parse biểu đồ/hình vẽ                            | `Parse the figure.`              |
 | Mô tả ảnh                                        | `Describe this image in detail.` |
 | Tìm vị trí một chuỗi                             | `<                               |
-
 
 Khi dùng `<|grounding|>`, kết quả có dạng:
 
@@ -287,4 +305,3 @@ Chạy từng trang cũng tránh việc nhiều ảnh cạnh tranh context và d
 - Model gốc: [https://huggingface.co/baidu/Unlimited-OCR](https://huggingface.co/baidu/Unlimited-OCR)
 - GGUF: [https://huggingface.co/sahilchachra/Unlimited-OCR-GGUF](https://huggingface.co/sahilchachra/Unlimited-OCR-GGUF)
 - llama.cpp: [https://github.com/ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp)
-
