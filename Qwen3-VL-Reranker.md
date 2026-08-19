@@ -150,28 +150,135 @@ Rerank template trong bản bealore có instruction mặc định:
 
 > Given a web search query, retrieve relevant passages that answer the query
 
-Model chính thức hỗ trợ instruction tùy biến và Qwen khuyến nghị instruction tiếng Anh theo từng task. Tuy nhiên API rerank văn bản được mô tả trong llama.cpp chỉ nhận `query` và `documents`; không có trường `instruction` chuẩn. Không tự nối instruction vào query nếu pipeline cần tương thích điểm số. Muốn thay instruction một cách chính xác cần dùng rerank template đã chỉnh hoặc pipeline mtmd tùy biến và kiểm thử lại.
+Model chính thức hỗ trợ instruction tùy biến và Qwen khuyến nghị instruction tiếng Anh theo từng task. Tuy nhiên API rerank văn bản được mô tả trong llama.cpp chỉ nhận `query` và `documents`; không có trường `instruction` chuẩn. Không tự nối instruction vào query nếu pipeline cần tương thích điểm số. Muốn thay instruction một cách chính xác cần dùng rerank template đã chỉnh, hoặc tự dựng đầy đủ prompt khi dùng low-level `/embedding` như phần tiếp theo, rồi kiểm thử lại.
 
-## 7. Vì sao model rerank được ảnh, nhưng `/v1/rerank` hiện chưa làm được?
+## 7. Rerank document có ảnh qua API
 
-Có hai lớp khả năng khác nhau:
+Có hai lớp API cần phân biệt:
 
-1. **Model/graph có khả năng:** Qwen3-VL-Reranker vẫn là toàn bộ Qwen3-VL conditional-generation backbone. `scripts/qwen3_vl_reranker.py` của model gốc chạy processor ảnh/video, gọi `lm.model(...).last_hidden_state[:, -1]`, rồi chấm bằng hiệu hai hàng `yes` và `no` của LM head. Trong GGUF, LM và rank head nằm ở file chính; vision tower nằm trong `mmproj`. Sau khi mtmd chèn embedding ảnh vào chuỗi, graph rank dùng hidden state cuối nên điểm phụ thuộc vào ảnh.
-2. **HTTP endpoint chưa biểu diễn được media:** trong checkout hiện tại, `server-context.cpp::post_rerank` buộc `query` là string và deserialize `documents` thành `std::vector<std::string>`. Vì vậy object `image_url`, content parts hoặc `multimodal_data` đều không thể đi qua endpoint này. `format_prompt_rerank()` có nhận `mtmd_context`, nhưng với đầu vào string nó chỉ tokenize text; load projector không thay đổi schema request.
+1. **`/v1/rerank` chỉ hỗ trợ text:** trong checkout hiện tại, `server-context.cpp::post_rerank` buộc `query` là string và deserialize `documents` thành `std::vector<std::string>`. Vì vậy endpoint này không nhận `image_url`, content parts hay `multimodal_data`.
+2. **Low-level `/embedding` hỗ trợ multimedia:** `handle_embeddings_impl()` chuyển `content` qua `tokenize_input_prompts()`, nơi object `{ "prompt_string": ..., "multimodal_data": [...] }` được xử lý bởi mtmd. Khi server dùng `--pooling rank`, vector đầu ra là các xác suất classifier; với Qwen3-VL-Reranker có labels `["yes", "no"]`, phần tử đầu chính là relevance score mà `/v1/rerank` trả về.
 
-Do đó stock `/v1/rerank` hiện chỉ rerank text. Không có curl ảnh hợp lệ cho endpoint này. Muốn rerank ảnh phải sửa server để endpoint nhận content parts/media, dựng prompt có media marker rồi đưa bitmap qua mtmd trước khi đọc rank score, hoặc viết pipeline trực tiếp bằng libmtmd/llama.cpp. Khi đó load projector:
+Vì vậy có thể rerank ảnh trên stock server mà không sửa C++, nhưng client phải tự dựng **toàn bộ rerank template** và tự sắp xếp score.
+
+### 7.1. Chạy server vision-rerank
+
+Không dùng `--no-mmproj`. Load projector và tắt normalization của output classifier:
 
 ```bash
---mmproj-url https://huggingface.co/bealore/Qwen3-VL-Reranker-2B-GGUF/resolve/main/Qwen3-VL-Reranker-2B.mmproj-f16.gguf
+CUDA_VISIBLE_DEVICES=0 ./llama.cpp/llama-server \
+  -hf bealore/Qwen3-VL-Reranker-2B-GGUF \
+  --hf-file Qwen3-VL-Reranker-2B.f16.gguf \
+  --mmproj-url https://huggingface.co/bealore/Qwen3-VL-Reranker-2B-GGUF/resolve/main/Qwen3-VL-Reranker-2B.mmproj-f16.gguf \
+  --alias Qwen3-VL-Reranker-2B \
+  --reranking --pooling rank --embd-normalize -1 \
+  --host 0.0.0.0 --port 8082 \
+  --ctx-size 32768 --parallel 1 \
+  --flash-attn on --n-gpu-layers all --device CUDA0 \
+  --api-key llama-cpp-api-key
 ```
 
-Pipeline phải giữ đúng thứ tự template `<Instruct>`, `<Query>`, `<Document>` và assistant prefix trước token được pool. Với video còn phải xác nhận decoder/frame sampling của libmtmd. Nói ngắn gọn: **weights và inference graph hỗ trợ vision-ranking; API rerank hiện tại là nút thắt.**
+`--embd-normalize -1` là bắt buộc với đường `/embedding`: graph đã softmax rank head thành `[P("yes"), P("no")]`; L2-normalize lần nữa sẽ làm sai xác suất. `/v1/rerank` dùng trực tiếp phần tử đầu nên không gặp bước normalization này.
+
+Model text-only như Qwen3-Reranker-0.6B không thể nhận ảnh chỉ bằng cách gắn thêm projector; phải dùng checkpoint Qwen3-**VL**-Reranker cùng `mmproj` tương ứng.
+
+### 7.2. Gọi `/embedding` với document ảnh
+
+Media marker của server là ngẫu nhiên và thay đổi sau mỗi lần restart. Luôn lấy marker hiện tại từ `/props`:
+
+```bash
+MEDIA_MARKER="$(curl -fsS http://localhost:8082/props \
+  -H 'Authorization: Bearer llama-cpp-api-key' | jq -er '.media_marker')"
+IMAGE_B64="$(base64 -w 0 document.png)"
+```
+
+Trên macOS, thay command `base64` bằng:
+
+```bash
+IMAGE_B64="$(base64 < document.png | tr -d '\n')"
+```
+
+Dựng prompt đúng template `tokenizer.chat_template.rerank` của GGUF. `/embedding` không tự áp dụng template:
+
+```bash
+QUERY='What is the capital of China?'
+DOCUMENT_TEXT='Use the information shown in this document image.'
+
+PROMPT="$(printf '%s' \
+"<|im_start|>system
+Judge whether the Document meets the requirements based on the Query and the Instruct provided. Note that the answer can only be \"yes\" or \"no\".<|im_end|>
+<|im_start|>user
+<Instruct>: Given a web search query, retrieve relevant passages that answer the query
+<Query>: ${QUERY}
+<Document>: ${MEDIA_MARKER}${DOCUMENT_TEXT}<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+")"
+```
+
+Gửi ảnh dưới dạng base64 thô, không thêm prefix `data:image/...;base64,`:
+
+```bash
+jq -n --arg prompt "$PROMPT" --arg image "$IMAGE_B64" \
+  '{
+    content: {
+      prompt_string: $prompt,
+      multimodal_data: [$image]
+    },
+    embd_normalize: -1
+  }' |
+curl -fsS http://localhost:8082/embedding \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer llama-cpp-api-key' \
+  -d @- | jq
+```
+
+Response native có dạng:
+
+```json
+[
+  {
+    "index": 0,
+    "embedding": [[0.733, 0.267]]
+  }
+]
+```
+
+Vì labels là `["yes", "no"]`, lấy relevance score bằng:
+
+```bash
+jq '.[0].embedding[0][0]'
+```
+
+Số cụ thể ở trên chỉ minh họa; cần dùng smoke test để xác nhận model và projector thực tế.
+
+### 7.3. Batch và sắp xếp nhiều document
+
+`content` có thể là mảng các object. Mỗi object phải chứa một prompt query-document hoàn chỉnh; document có ảnh phải có số media marker bằng đúng số phần tử `multimodal_data`. Server trả một phần tử theo từng input, nhưng không tạo response rerank hay áp dụng `top_n`. Client có thể chuyển và sắp xếp như sau:
+
+```bash
+jq '
+  map({
+    index: .index,
+    relevance_score: .embedding[0][0]
+  })
+  | sort_by(-.relevance_score)
+'
+```
+
+Nếu cần schema chuẩn `/v1/rerank` nhận multimedia trực tiếp, vẫn phải mở rộng `post_rerank` để nhận content object, chèn media vào đúng `{document}` trong rerank template và chuyển bitmap qua mtmd. Low-level `/embedding` là workaround dùng được với code hiện tại. Với video, cần xác nhận decoder và frame sampling của phiên bản libmtmd đang triển khai.
 
 ## 8. Xử lý lỗi thường gặp
 
 - **`This server does not support reranking`:** thêm `--reranking` và khởi động lại server.
 - **Pooling sai hoặc không có score:** thêm `--pooling rank`; kiểm tra GGUF có metadata `RANK` và tensor `cls.output.weight`.
 - **Score gần như hằng số:** nhiều khả năng đang dùng conversion generative thiếu rank head; chuyển sang bản bealore đã xác minh.
+- **Score từ `/embedding` không còn có tổng bằng 1:** đặt `--embd-normalize -1` trên server và `"embd_normalize": -1` trong request; không L2-normalize xác suất rank head.
+- **`number of media markers ... does not match number of bitmaps`:** lấy lại `.media_marker` từ `/props`; mỗi marker phải có đúng một phần tử base64 tương ứng.
+- **Có projector nhưng ảnh không ảnh hưởng score:** kiểm tra đang dùng checkpoint Qwen3-VL-Reranker, đúng `mmproj`, và media marker nằm bên trong phần `<Document>` của full rerank template.
 - **CUDA out of memory:** bỏ projector cho text-only, giảm context/parallel hoặc giảm GPU offload.
 - **Tên model không khớp:** gửi giá trị của `--alias`, ở đây là `Qwen3-VL-Reranker-2B`.
 - **Query/document quá dài:** giảm độ dài input hoặc tăng `--ctx-size`, tối đa theo model là 32.768 token.
@@ -183,4 +290,5 @@ Pipeline phải giữ đúng thứ tự template `<Instruct>`, `<Query>`, `<Docu
 - [bealore/Qwen3-VL-Reranker-2B-GGUF](https://huggingface.co/bealore/Qwen3-VL-Reranker-2B-GGUF)
 - [mradermacher/Qwen3-VL-Reranker-2B-i1-GGUF](https://huggingface.co/mradermacher/Qwen3-VL-Reranker-2B-i1-GGUF)
 - [mradermacher/Qwen3-VL-Reranker-2B-GGUF](https://huggingface.co/mradermacher/Qwen3-VL-Reranker-2B-GGUF)
+- llama.cpp: [`post_rerank` và `handle_embeddings_impl`](llama.cpp/tools/server/server-context.cpp), [`tokenize_input_subprompt`](llama.cpp/tools/server/server-common.cpp), rank graph trong [`llama-graph.cpp`](llama.cpp/src/llama-graph.cpp), và rerank template trong [`conversion/qwen.py`](llama.cpp/conversion/qwen.py)
 - Help của binary trong repository: [llama-cpp.md](llama-cpp.md)
