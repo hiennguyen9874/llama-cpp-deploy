@@ -32,18 +32,22 @@ Model gốc chứa adapter cho cả bốn tác vụ và phù hợp với `transf
 - `jinaai/jina-embeddings-v5-text-small`
 - `jinaai/jina-embeddings-v5-text-nano`
 
-Với llama.cpp, vLLM, TEI hoặc ONNX, nên dùng model đã merge adapter theo tác vụ:
+Với llama.cpp, nên dùng repository GGUF đã merge đúng adapter. Cả `small` và `nano` đều có đủ bốn task theo pattern:
 
-| Nhu cầu | Repository `small` |
-|---|---|
-| Semantic search, RAG | `jinaai/jina-embeddings-v5-text-small-retrieval` |
-| Duplicate detection, sentence similarity | `jinaai/jina-embeddings-v5-text-small-text-matching` |
-| Gom cụm | `jinaai/jina-embeddings-v5-text-small-clustering` |
-| Đặc trưng cho classification | `jinaai/jina-embeddings-v5-text-small-classification` |
+```text
+jinaai/jina-embeddings-v5-text-{size}-{task}-GGUF
+```
 
-Các repository trên có GGUF từ F16 đến nhiều mức quantization. Riêng retrieval còn có repository chuyên biệt `jinaai/jina-embeddings-v5-text-small-retrieval-GGUF`.
+| Nhu cầu | Repository `small` | Repository `nano` |
+|---|---|---|
+| Semantic search, RAG | `jinaai/jina-embeddings-v5-text-small-retrieval-GGUF` | `jinaai/jina-embeddings-v5-text-nano-retrieval-GGUF` |
+| Duplicate detection, sentence similarity | `jinaai/jina-embeddings-v5-text-small-text-matching-GGUF` | `jinaai/jina-embeddings-v5-text-nano-text-matching-GGUF` |
+| Gom cụm | `jinaai/jina-embeddings-v5-text-small-clustering-GGUF` | `jinaai/jina-embeddings-v5-text-nano-clustering-GGUF` |
+| Đặc trưng cho classification | `jinaai/jina-embeddings-v5-text-small-classification-GGUF` | `jinaai/jina-embeddings-v5-text-nano-classification-GGUF` |
 
-Không dùng một model task-specific cho tác vụ khác. Model classification chỉ sinh vector đặc trưng; nó không trực tiếp trả về nhãn.
+Các model task-specific không có hậu tố `-GGUF` là checkpoint Transformers/sentence-transformers đã merge adapter; các biến thể `-mlx` dành cho MLX. vLLM, TEI và ONNX phải dùng đúng artifact được backend đó hỗ trợ, không dùng file GGUF.
+
+Không dùng một model task-specific cho tác vụ khác. llama.cpp không đổi adapter lúc runtime. Model classification chỉ sinh vector đặc trưng; nó không trực tiếp trả về nhãn.
 
 ## Chạy bản GGUF bằng llama.cpp
 
@@ -146,7 +150,7 @@ Kết quả chứa một vector 1024 chiều cho mỗi phần tử `input`. Khi 
 
 ### Đổi tác vụ hoặc quantization
 
-Ví dụ text matching Q8_0:
+Thay `retrieval` bằng `text-matching`, `clustering` hoặc `classification` trong cả repository và alias. Ví dụ text matching Q8_0:
 
 ```bash
 ./llama.cpp/build/bin/llama-server \
@@ -251,9 +255,12 @@ Yêu cầu theo model card của model gốc: `transformers>=4.57.0`, `torch>=2.
 
 - [jina-embeddings-v5-text-small](https://huggingface.co/jinaai/jina-embeddings-v5-text-small)
 - [jina-embeddings-v5-text-nano](https://huggingface.co/jinaai/jina-embeddings-v5-text-nano)
-- [Small text-matching](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-text-matching)
-- [Small retrieval](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-retrieval)
-- [Small clustering](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-clustering)
-- [Small classification](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-classification)
+- [Small text-matching GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-text-matching-GGUF)
 - [Small retrieval GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-retrieval-GGUF)
+- [Small clustering GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-clustering-GGUF)
+- [Small classification GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-classification-GGUF)
+- [Nano text-matching GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-nano-text-matching-GGUF)
+- [Nano retrieval GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-nano-retrieval-GGUF)
+- [Nano clustering GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-nano-clustering-GGUF)
+- [Nano classification GGUF](https://huggingface.co/jinaai/jina-embeddings-v5-text-nano-classification-GGUF)
 - [Optimizing GGUFs for Decoder-Only Embedding Models](https://jina.ai/news/optimizing-ggufs-for-decoder-only-embedding-models/)
