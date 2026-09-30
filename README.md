@@ -35,6 +35,7 @@ EOF
 
 ```bash
 apt update -y && apt install -y curl libssl-dev libcurl4-openssl-dev
+apt install cuda-toolkit-12-6
 
 git clone https://github.com/ggml-org/llama.cpp
 
